@@ -141,7 +141,7 @@ impl Chip8 {
                 if res > 0xFF {
                     self.v[0xF] = 1;
                 }
-                self.v[x] = (res & 0xF) as u8;
+                self.v[x] = (res & 0xFF) as u8;
             }
             Opcode::AssignSub { x, y } => {
                 if self.v[x] >= self.v[y] {
@@ -149,7 +149,7 @@ impl Chip8 {
                     self.v[x] -= self.v[y];
                 } else {
                     self.v[0xF] = 0;
-                    self.v[x] = (((self.v[x] as u16) << 1) - self.v[y] as u16) as u8;
+                    self.v[x] = 0xFF - (self.v[y] - self.v[x] - 1);
                 }
             }
             Opcode::AssignShift { x } => {
@@ -159,15 +159,15 @@ impl Chip8 {
             Opcode::AssignRevSub { x, y } => {
                 if self.v[y] >= self.v[x] {
                     self.v[0xF] = 1;
-                    self.v[y] -= self.v[x];
+                    self.v[x] = self.v[y] - self.v[x];
                 } else {
                     self.v[0xF] = 0;
-                    self.v[y] = (((self.v[y] as u16) << 1) - self.v[x] as u16) as u8;
+                    self.v[x] = 0xFF - (self.v[x] - self.v[y] - 1);
                 }
             }
             Opcode::AssignRevShift { x } => {
                 self.v[0xF] = self.v[x] & 0x80;
-                self.v[x] = (((self.v[x] as u16) << 1) & 0xF) as u8;
+                self.v[x] = (((self.v[x] as u16) << 1) & 0xFF) as u8;
             }
             Opcode::SkipIfNotEqual { x, y } => {
                 if self.v[x] != self.v[y] {
