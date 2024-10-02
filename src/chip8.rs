@@ -61,7 +61,6 @@ impl Chip8 {
 
     fn execute(&mut self) -> Result<()> {
         let opcode = self.fetch_opcode().context("Opcode should not be None")?;
-        dbg!(&opcode);
         match opcode {
             Opcode::ClearScreen => self.ui.clear_screen(),
             Opcode::Return => {
