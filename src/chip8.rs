@@ -256,13 +256,13 @@ impl Chip8 {
             }
             Opcode::RegDump { x } => {
                 for offset in 0..=x {
-                    self.v[offset] = self.memory[self.i as usize + offset];
+                    self.memory[self.i as usize + offset] = self.v[offset];
                 }
                 self.i += x as u16 + 1;
             }
             Opcode::RegLoad { x } => {
                 for offset in 0..=x {
-                    self.memory[self.i as usize + offset] = self.v[offset];
+                    self.v[offset] = self.memory[self.i as usize + offset];
                 }
                 self.i += x as u16 + 1;
             }
