@@ -185,6 +185,9 @@ impl Chip8 {
             Opcode::DelayTimerAssign { x } => {
                 self.delay_timer = self.v[x];
             }
+            Opcode::SoundTimerAssign { x } => {
+                self.sound_timer = self.v[x];
+            }
             Opcode::RegAssignAdd { x } => {
                 self.i += self.v[x] as u16;
             }
