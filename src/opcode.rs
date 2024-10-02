@@ -102,6 +102,7 @@ impl TryFrom<u16> for Opcode {
                 0x0004 => Ok(Opcode::AssignAdd { x, y }),
                 0x0005 => Ok(Opcode::AssignSub { x, y }),
                 0x0006 => Ok(Opcode::AssignShift { x }),
+                0x0007 => Ok(Opcode::AssignRevSub { x, y }),
                 0x000E => Ok(Opcode::AssignRevShift { x }),
                 _ => invalid_opcode(),
             },

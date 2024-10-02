@@ -156,6 +156,15 @@ impl Chip8 {
                 self.v[0xF] = self.v[x] & 1;
                 self.v[x] >>= 1;
             }
+            Opcode::AssignRevSub { x, y } => {
+                if self.v[y] >= self.v[x] {
+                    self.v[0xF] = 1;
+                    self.v[y] -= self.v[x];
+                } else {
+                    self.v[0xF] = 0;
+                    self.v[y] = (((self.v[y] as u16) << 1) - self.v[x] as u16) as u8;
+                }
+            }
             Opcode::AssignRevShift { x } => {
                 self.v[0xF] = self.v[x] & 0x80;
                 self.v[x] = (((self.v[x] as u16) << 1) & 0xF) as u8;
