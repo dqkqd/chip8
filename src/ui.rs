@@ -7,6 +7,8 @@ use sdl2::{
 pub(crate) struct UI {
     canvas: Canvas<Window>,
     event: EventPump,
+    pub should_stop: bool,
+    pub keys: Vec<Keycode>,
 }
 
 impl UI {
@@ -30,6 +32,8 @@ impl UI {
         Ok(UI {
             canvas: window.into_canvas().present_vsync().build()?,
             event: event_pump,
+            should_stop: false,
+            keys: Vec::new(),
         })
     }
 
@@ -55,17 +59,50 @@ impl UI {
         Ok(())
     }
 
-    pub(crate) fn should_stop(&mut self) -> bool {
+    pub(crate) fn poll_events(&mut self) {
         for event in self.event.poll_iter() {
             match event {
-                Event::Quit { .. }
-                | Event::KeyDown {
+                Event::Quit { .. } => {
+                    self.should_stop = true;
+                }
+                Event::KeyDown {
                     keycode: Some(Keycode::Escape),
                     ..
-                } => return true,
+                } => {
+                    self.should_stop = true;
+                }
+                Event::KeyDown { keycode, .. } => self.keys.extend(keycode),
                 _ => {}
             }
         }
-        false
+    }
+
+    pub(crate) fn consume_keys(&mut self) -> [bool; 16] {
+        let mut pressed = [false; 16];
+
+        let keys = std::mem::take(&mut self.keys);
+        keys.into_iter()
+            .filter_map(|key| match key {
+                Keycode::Num1 => Some(0),
+                Keycode::Num2 => Some(1),
+                Keycode::Num3 => Some(2),
+                Keycode::Num4 => Some(3),
+                Keycode::Q => Some(4),
+                Keycode::W => Some(5),
+                Keycode::E => Some(6),
+                Keycode::R => Some(7),
+                Keycode::A => Some(8),
+                Keycode::S => Some(9),
+                Keycode::D => Some(10),
+                Keycode::F => Some(11),
+                Keycode::Z => Some(12),
+                Keycode::X => Some(13),
+                Keycode::C => Some(14),
+                Keycode::V => Some(15),
+                _ => None,
+            })
+            .for_each(|id| pressed[id] = true);
+
+        pressed
     }
 }

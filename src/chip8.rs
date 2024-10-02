@@ -159,6 +159,13 @@ impl Chip8 {
 
                 self.should_rerender = true;
             }
+            Opcode::SkipIfNotPress { x } => {
+                let vx = self.v[x];
+                let keys_state = self.ui.consume_keys();
+                if !keys_state[vx as usize] {
+                    self.pc += 2;
+                }
+            }
             Opcode::RegAssignAdd { x } => {
                 let vx = self.v[x];
                 self.i += vx as u16;
@@ -191,10 +198,12 @@ impl Chip8 {
 
         loop {
             self.execute()?;
+            self.ui.poll_events();
 
-            if self.ui.should_stop() {
+            if self.ui.should_stop {
                 break;
             }
+
             if self.should_rerender {
                 self.ui.render(&self.gfx)?;
                 self.should_rerender = false;
