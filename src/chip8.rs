@@ -164,6 +164,13 @@ impl Chip8 {
 
                 self.should_rerender = true;
             }
+            Opcode::SkipIfPress { x } => {
+                let vx = self.v[x];
+                let keys_state = self.ui.consume_keys();
+                if keys_state[vx as usize] {
+                    self.pc += 2;
+                }
+            }
             Opcode::SkipIfNotPress { x } => {
                 let vx = self.v[x];
                 let keys_state = self.ui.consume_keys();

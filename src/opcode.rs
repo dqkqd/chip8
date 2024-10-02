@@ -44,6 +44,8 @@ pub(crate) enum Opcode {
     AssignRegister { addr: u16 },
     // DXYN
     Draw { x: usize, y: usize, height: u8 },
+    // E09E
+    SkipIfPress { x: usize },
     // EXA1
     SkipIfNotPress { x: usize },
     // FX15
@@ -99,6 +101,7 @@ impl TryFrom<u16> for Opcode {
             0xA000 => Ok(Opcode::AssignRegister { addr: nnn }),
             0xD000 => Ok(Opcode::Draw { x, y, height: n }),
             0xE000 => match nn {
+                0x009E => Ok(Opcode::SkipIfPress { x }),
                 0x00A1 => Ok(Opcode::SkipIfNotPress { x }),
                 _ => invalid_opcode(),
             },
