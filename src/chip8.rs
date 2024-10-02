@@ -177,6 +177,9 @@ impl Chip8 {
                     self.pc += 2;
                 }
             }
+            Opcode::AssignDelayTimer { x } => {
+                self.v[x] = self.delay_timer;
+            }
             Opcode::DelayTimerAssign { x } => {
                 self.delay_timer = self.v[x];
             }

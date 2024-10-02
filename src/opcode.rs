@@ -48,6 +48,8 @@ pub(crate) enum Opcode {
     SkipIfPress { x: usize },
     // EXA1
     SkipIfNotPress { x: usize },
+    // FX07
+    AssignDelayTimer { x: usize },
     // FX15
     DelayTimerAssign { x: usize },
     // FX1E
@@ -106,6 +108,7 @@ impl TryFrom<u16> for Opcode {
                 _ => invalid_opcode(),
             },
             0xF000 => match nn {
+                0x0007 => Ok(Opcode::AssignDelayTimer { x }),
                 0x0015 => Ok(Opcode::DelayTimerAssign { x }),
                 0x001E => Ok(Opcode::RegAssignAdd { x }),
                 0x0033 => Ok(Opcode::BinaryCodedDecimal { x }),
