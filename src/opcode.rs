@@ -42,6 +42,8 @@ pub(crate) enum Opcode {
     AssignRegister { addr: u16 },
     // DXYN
     Draw { x: usize, y: usize, height: u8 },
+    // FX1E
+    RegAssignAdd { x: usize },
     // FX33
     BinaryCodedDecimal { x: usize },
     // FX55
@@ -90,6 +92,7 @@ impl TryFrom<u16> for Opcode {
             0xA000 => Ok(Opcode::AssignRegister { addr: nnn }),
             0xD000 => Ok(Opcode::Draw { x, y, height: n }),
             0xF000 => match nn {
+                0x001E => Ok(Opcode::RegAssignAdd { x }),
                 0x0033 => Ok(Opcode::BinaryCodedDecimal { x }),
                 0x0055 => Ok(Opcode::RegDump { x }),
                 0x0065 => Ok(Opcode::RegLoad { x }),

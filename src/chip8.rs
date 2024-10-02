@@ -159,6 +159,10 @@ impl Chip8 {
 
                 self.should_rerender = true;
             }
+            Opcode::RegAssignAdd { x } => {
+                let vx = self.v[x];
+                self.i += vx as u16;
+            }
             Opcode::BinaryCodedDecimal { x } => {
                 let vx = self.v[x];
                 self.memory[self.i as usize] = vx / 100;
