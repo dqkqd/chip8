@@ -129,7 +129,7 @@ impl UI {
         }
     }
 
-    pub(crate) fn consume_keys(&mut self) -> u16 {
+    pub(crate) fn get_key_state(&mut self) -> u16 {
         let mut key_state = 0u16;
 
         let keys = std::mem::take(&mut self.keys);

@@ -186,6 +186,22 @@ impl Chip8 {
             Opcode::AssignDelayTimer { x } => {
                 self.v[x] = self.delay_timer;
             }
+            Opcode::AssignKey { x } => {
+                self.key_state = 0;
+                loop {
+                    self.ui.poll_events();
+                    if self.ui.should_stop {
+                        break;
+                    }
+                    let key_state = self.ui.get_key_state();
+                    if key_state != 0 {
+                        self.v[x] = key_state.trailing_zeros() as u8;
+                        break;
+                    }
+                    std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+                }
+                self.v[x] = self.delay_timer;
+            }
             Opcode::DelayTimerAssign { x } => {
                 self.delay_timer = self.v[x];
             }
@@ -244,7 +260,7 @@ impl Chip8 {
             }
             self.ui.stop_sound();
 
-            self.key_state |= self.ui.consume_keys();
+            self.key_state |= self.ui.get_key_state();
             std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         }
 
