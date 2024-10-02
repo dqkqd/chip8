@@ -58,6 +58,8 @@ pub(crate) enum Opcode {
     SoundTimerAssign { x: usize },
     // FX1E
     RegAssignAdd { x: usize },
+    // FX29
+    RegAssignFont { x: usize },
     // FX33
     BinaryCodedDecimal { x: usize },
     // FX55
@@ -117,6 +119,7 @@ impl TryFrom<u16> for Opcode {
                 0x0015 => Ok(Opcode::DelayTimerAssign { x }),
                 0x0018 => Ok(Opcode::SoundTimerAssign { x }),
                 0x001E => Ok(Opcode::RegAssignAdd { x }),
+                0x0029 => Ok(Opcode::RegAssignFont { x }),
                 0x0033 => Ok(Opcode::BinaryCodedDecimal { x }),
                 0x0055 => Ok(Opcode::RegDump { x }),
                 0x0065 => Ok(Opcode::RegLoad { x }),
