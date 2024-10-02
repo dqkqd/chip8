@@ -59,6 +59,7 @@ impl Chip8 {
         let opcode = self.fetch_opcode().context("Opcode should not be None")?;
         dbg!(&opcode);
         match opcode {
+            Opcode::ClearScreen => self.ui.clear_screen(),
             Opcode::Return => {
                 self.pc = self.stack.pop().context("Invalid stack pointer")?;
             }

@@ -37,6 +37,12 @@ impl UI {
         })
     }
 
+    pub(crate) fn clear_screen(&mut self) {
+        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
+        self.canvas.clear();
+        self.canvas.present();
+    }
+
     pub(crate) fn init(&mut self) {
         self.canvas.set_draw_color(Color::RGB(0, 0, 0));
     }

@@ -2,6 +2,8 @@ use anyhow::{bail, Error};
 
 #[derive(Debug)]
 pub(crate) enum Opcode {
+    // 00E0
+    ClearScreen,
     // 00EE
     Return,
     // 1NNN
@@ -69,6 +71,7 @@ impl TryFrom<u16> for Opcode {
 
         match code {
             0x0000 => match nnn {
+                0x00E0 => Ok(Opcode::ClearScreen),
                 0x00EE => Ok(Opcode::Return),
                 _ => invalid_opcode(),
             },
