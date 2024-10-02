@@ -165,7 +165,7 @@ impl Chip8 {
                     self.pc += 2;
                 }
             }
-            Opcode::AssignRegister { addr } => {
+            Opcode::RegAssign { addr } => {
                 self.i = addr;
             }
             Opcode::Draw { x, y, height } => {
