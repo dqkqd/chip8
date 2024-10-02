@@ -62,7 +62,9 @@ impl Chip8 {
     fn execute(&mut self) -> Result<()> {
         let opcode = self.fetch_opcode().context("Opcode should not be None")?;
         match opcode {
-            Opcode::ClearScreen => self.ui.clear_screen(),
+            Opcode::ClearScreen => {
+                self.gfx.fill(0);
+            }
             Opcode::Return => {
                 self.pc = self.stack.pop().context("Invalid stack pointer")?;
             }
@@ -210,8 +212,6 @@ impl Chip8 {
     }
 
     pub fn run(&mut self) -> Result<()> {
-        self.ui.init();
-
         loop {
             self.execute()?;
             self.ui.poll_events();

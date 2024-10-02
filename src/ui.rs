@@ -76,23 +76,16 @@ impl UI {
         })
     }
 
-    pub(crate) fn clear_screen(&mut self) {
+    pub(crate) fn render(&mut self, gfx: &[u8; 64 * 32]) -> Result<()> {
         self.canvas.set_draw_color(Color::RGB(0, 0, 0));
         self.canvas.clear();
-        self.canvas.present();
-    }
 
-    pub(crate) fn init(&mut self) {
-        self.canvas.set_draw_color(Color::RGB(0, 0, 0));
-    }
-
-    pub(crate) fn render(&mut self, gfx: &[u8; 64 * 32]) -> Result<()> {
+        self.canvas.set_draw_color(Color::RGB(255, 255, 255));
         for x in 0..64 {
             for y in 0..32 {
                 let offset = x + y * 64;
                 let bit = gfx[offset as usize];
                 if bit == 1 {
-                    self.canvas.set_draw_color(Color::RGB(255, 255, 255));
                     self.canvas
                         .fill_rect(Rect::new(x * 10, y * 10, 10, 10))
                         .ok()
