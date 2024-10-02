@@ -123,13 +123,14 @@ impl UI {
                     self.should_stop = true;
                 }
                 Event::KeyDown { keycode, .. } => self.keys.extend(keycode),
+                Event::KeyUp { keycode, .. } => self.keys.extend(keycode),
                 _ => {}
             }
         }
     }
 
-    pub(crate) fn consume_keys(&mut self) -> [bool; 16] {
-        let mut pressed = [false; 16];
+    pub(crate) fn consume_keys(&mut self) -> u16 {
+        let mut key_state = 0u16;
 
         let keys = std::mem::take(&mut self.keys);
         keys.into_iter()
@@ -152,9 +153,9 @@ impl UI {
                 Keycode::V => Some(15),
                 _ => None,
             })
-            .for_each(|id| pressed[id] = true);
+            .for_each(|key_id| key_state |= 1 << key_id);
 
-        pressed
+        key_state
     }
 }
 

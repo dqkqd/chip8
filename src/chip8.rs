@@ -16,6 +16,7 @@ pub struct Chip8 {
     end_of_mem: usize,
     delay_timer: u8,
     sound_timer: u8,
+    key_state: u16,
 }
 
 impl Chip8 {
@@ -32,6 +33,7 @@ impl Chip8 {
             end_of_mem: 0,
             delay_timer: 0,
             sound_timer: 0,
+            key_state: 0,
         };
 
         let content = std::fs::read(rom.as_ref())?;
@@ -167,17 +169,19 @@ impl Chip8 {
             }
             Opcode::SkipIfPress { x } => {
                 let vx = self.v[x];
-                let keys_state = self.ui.consume_keys();
-                if keys_state[vx as usize] {
+                let mask = (1 << vx) as u16;
+                if self.key_state & mask != 0 {
                     self.pc += 2;
                 }
+                self.key_state = 0;
             }
             Opcode::SkipIfNotPress { x } => {
                 let vx = self.v[x];
-                let keys_state = self.ui.consume_keys();
-                if !keys_state[vx as usize] {
+                let mask = (1 << vx) as u16;
+                if self.key_state & mask == 0 {
                     self.pc += 2;
                 }
+                self.key_state = 0;
             }
             Opcode::AssignDelayTimer { x } => {
                 self.v[x] = self.delay_timer;
@@ -238,9 +242,10 @@ impl Chip8 {
                 }
                 self.sound_timer -= 1;
             }
-
-            std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
             self.ui.stop_sound();
+
+            self.key_state |= self.ui.consume_keys();
+            std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
         }
 
         Ok(())
