@@ -14,6 +14,8 @@ pub struct Chip8 {
     ui: UI,
     should_rerender: bool,
     end_of_mem: usize,
+    delay_timer: u8,
+    sound_timer: u8,
 }
 
 impl Chip8 {
@@ -28,6 +30,8 @@ impl Chip8 {
             ui: UI::new()?,
             should_rerender: false,
             end_of_mem: 0,
+            delay_timer: 0,
+            sound_timer: 0,
         };
 
         let content = std::fs::read(rom.as_ref())?;
@@ -167,9 +171,11 @@ impl Chip8 {
                     self.pc += 2;
                 }
             }
+            Opcode::DelayTimerAssign { x } => {
+                self.delay_timer = self.v[x];
+            }
             Opcode::RegAssignAdd { x } => {
-                let vx = self.v[x];
-                self.i += vx as u16;
+                self.i += self.v[x] as u16;
             }
             Opcode::BinaryCodedDecimal { x } => {
                 let vx = self.v[x];
@@ -210,7 +216,19 @@ impl Chip8 {
                 self.should_rerender = false;
             }
 
+            if self.delay_timer > 0 {
+                self.delay_timer -= 1;
+            }
+
+            if self.sound_timer > 0 {
+                if self.sound_timer == 1 {
+                    self.ui.play_sound();
+                }
+                self.sound_timer -= 1;
+            }
+
             std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+            self.ui.stop_sound();
         }
 
         Ok(())
