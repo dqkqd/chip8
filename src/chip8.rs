@@ -94,7 +94,6 @@ impl Chip8 {
                 self.pc = self.stack.pop().context("Invalid stack pointer")?;
             }
             Opcode::Jump { addr } => {
-                self.stack.push(self.pc);
                 self.pc = addr;
             }
             Opcode::CallSub { addr } => {
