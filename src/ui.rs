@@ -19,7 +19,6 @@ pub(crate) struct UI {
     audio_device: AudioDevice<SquareWave>,
     sound_stop_at: Option<SystemTime>,
     pub should_stop: bool,
-    pub keys: Vec<Keycode>,
 }
 
 struct SquareWave {
@@ -72,7 +71,6 @@ impl UI {
             audio_device,
             sound_stop_at: None,
             should_stop: false,
-            keys: Vec::new(),
         })
     }
 
@@ -110,52 +108,47 @@ impl UI {
         }
     }
 
-    pub(crate) fn poll_events(&mut self) {
+    pub(crate) fn poll_keys(&mut self) -> [bool; 16] {
         for event in self.event.poll_iter() {
-            match event {
-                Event::Quit { .. } => {
-                    self.should_stop = true;
-                }
-                Event::KeyDown {
-                    keycode: Some(Keycode::Escape),
-                    ..
-                } => {
-                    self.should_stop = true;
-                }
-                Event::KeyDown { keycode, .. } => self.keys.extend(keycode),
-                Event::KeyUp { keycode, .. } => self.keys.extend(keycode),
-                _ => {}
+            if let Event::Quit { .. } = event {
+                self.should_stop = true;
             }
         }
-    }
+        let keys = self
+            .event
+            .keyboard_state()
+            .pressed_scancodes()
+            .filter_map(Keycode::from_scancode)
+            .collect::<Vec<Keycode>>();
 
-    pub(crate) fn get_key_state(&mut self) -> u16 {
-        let mut key_state = 0u16;
+        if keys.iter().any(|code| code == &Keycode::Escape) {
+            self.should_stop = true;
+        }
 
-        let keys = std::mem::take(&mut self.keys);
+        let mut keymap = [false; 16];
         keys.into_iter()
             .filter_map(|key| match key {
-                Keycode::Num1 => Some(0),
-                Keycode::Num2 => Some(1),
-                Keycode::Num3 => Some(2),
-                Keycode::Num4 => Some(3),
-                Keycode::Q => Some(4),
-                Keycode::W => Some(5),
-                Keycode::E => Some(6),
-                Keycode::R => Some(7),
-                Keycode::A => Some(8),
-                Keycode::S => Some(9),
-                Keycode::D => Some(10),
-                Keycode::F => Some(11),
-                Keycode::Z => Some(12),
-                Keycode::X => Some(13),
-                Keycode::C => Some(14),
-                Keycode::V => Some(15),
+                Keycode::Num1 => Some(0x1),
+                Keycode::Num2 => Some(0x2),
+                Keycode::Num3 => Some(0x3),
+                Keycode::Num4 => Some(0xC),
+                Keycode::Q => Some(0x4),
+                Keycode::W => Some(0x5),
+                Keycode::E => Some(0x6),
+                Keycode::R => Some(0xD),
+                Keycode::A => Some(0x7),
+                Keycode::S => Some(0x8),
+                Keycode::D => Some(0x9),
+                Keycode::F => Some(0xE),
+                Keycode::Z => Some(0xA),
+                Keycode::X => Some(0x0),
+                Keycode::C => Some(0xB),
+                Keycode::V => Some(0xF),
                 _ => None,
             })
-            .for_each(|key_id| key_state |= 1 << key_id);
+            .for_each(|key_id| keymap[key_id] = true);
 
-        key_state
+        keymap
     }
 }
 

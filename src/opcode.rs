@@ -44,7 +44,7 @@ pub(crate) enum Opcode {
     RegAssign { addr: u16 },
     // DXYN
     Draw { x: usize, y: usize, height: u8 },
-    // E09E
+    // EX9E
     SkipIfPress { x: usize },
     // EXA1
     SkipIfNotPress { x: usize },

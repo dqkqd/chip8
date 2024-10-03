@@ -35,7 +35,8 @@ pub struct Chip8 {
     end_of_mem: usize,
     delay_timer: u8,
     sound_timer: u8,
-    key_state: u16,
+    keymap: [bool; 16],
+    waiting_key_press_status: Option<(usize, [bool; 16])>,
 }
 
 impl Chip8 {
@@ -52,7 +53,8 @@ impl Chip8 {
             end_of_mem: 0,
             delay_timer: 0,
             sound_timer: 0,
-            key_state: 0,
+            keymap: Default::default(),
+            waiting_key_press_status: None,
         };
 
         // load font
@@ -203,38 +205,21 @@ impl Chip8 {
             }
             Opcode::SkipIfPress { x } => {
                 let vx = self.v[x];
-                let mask = (1 << vx) as u16;
-                if self.key_state & mask != 0 {
+                if self.keymap[vx as usize] {
                     self.pc += 2;
                 }
-                self.key_state = 0;
             }
             Opcode::SkipIfNotPress { x } => {
                 let vx = self.v[x];
-                let mask = (1 << vx) as u16;
-                if self.key_state & mask == 0 {
+                if !self.keymap[vx as usize] {
                     self.pc += 2;
                 }
-                self.key_state = 0;
             }
             Opcode::AssignDelayTimer { x } => {
                 self.v[x] = self.delay_timer;
             }
             Opcode::AssignKey { x } => {
-                self.key_state = 0;
-                loop {
-                    self.ui.poll_events();
-                    if self.ui.should_stop {
-                        break;
-                    }
-                    let key_state = self.ui.get_key_state();
-                    if key_state != 0 {
-                        self.v[x] = key_state.trailing_zeros() as u8;
-                        break;
-                    }
-                    std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
-                }
-                self.v[x] = self.delay_timer;
+                self.waiting_key_press_status = Some((x, [false; 16]));
             }
             Opcode::DelayTimerAssign { x } => {
                 self.delay_timer = self.v[x];
@@ -275,8 +260,21 @@ impl Chip8 {
 
     pub fn run(&mut self) -> Result<()> {
         loop {
-            self.execute()?;
-            self.ui.poll_events();
+            self.keymap = self.ui.poll_keys();
+            match &mut self.waiting_key_press_status {
+                Some((x, keys_press_status)) => {
+                    for (key_id, status) in keys_press_status.iter_mut().enumerate() {
+                        if status == &true && !self.keymap[key_id] {
+                            // pressed and then release,
+                            self.v[*x] = key_id as u8;
+                            self.waiting_key_press_status = None;
+                            break;
+                        }
+                        *status |= self.keymap[key_id];
+                    }
+                }
+                None => self.execute()?,
+            }
 
             if self.ui.should_stop {
                 break;
@@ -299,8 +297,7 @@ impl Chip8 {
             }
             self.ui.stop_sound();
 
-            self.key_state |= self.ui.get_key_state();
-            std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 60));
+            std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 200));
         }
 
         Ok(())
