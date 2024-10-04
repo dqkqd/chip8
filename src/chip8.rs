@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 
-use crate::{opcode::Opcode, ui::UI};
 
 const FONT: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
@@ -22,6 +21,10 @@ const FONT: [u8; 80] = [
     0xF0, 0x80, 0xF0, 0x80, 0xF0, // E
     0xF0, 0x80, 0xF0, 0x80, 0x80, // F
 ];
+use crate::{
+    opcode::Opcode,
+    ui::{input::PollResult, UI},
+};
 
 pub struct Chip8 {
     memory: [u8; 4096],
@@ -260,7 +263,13 @@ impl Chip8 {
 
     pub fn run(&mut self) -> Result<()> {
         loop {
-            self.keymap = self.ui.poll_keys();
+            match self.ui.input.poll() {
+                PollResult::Stop => {
+                    break;
+                }
+                PollResult::KeyMap(keymap) => self.keymap = keymap,
+            };
+
             match &mut self.waiting_key_press_status {
                 Some((x, keys_press_status)) => {
                     for (key_id, status) in keys_press_status.iter_mut().enumerate() {
@@ -276,12 +285,8 @@ impl Chip8 {
                 None => self.execute()?,
             }
 
-            if self.ui.should_stop {
-                break;
-            }
-
             if self.should_rerender {
-                self.ui.render(&self.gfx)?;
+                self.ui.display.render(&self.gfx)?;
                 self.should_rerender = false;
             }
 
@@ -291,11 +296,11 @@ impl Chip8 {
 
             if self.sound_timer > 0 {
                 if self.sound_timer == 1 {
-                    self.ui.play_sound();
+                    // self.ui.play_sound();
                 }
                 self.sound_timer -= 1;
             }
-            self.ui.stop_sound();
+            // self.ui.stop_sound();
 
             std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 200));
         }
