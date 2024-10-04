@@ -23,8 +23,13 @@ const FONT: [u8; 80] = [
 ];
 use crate::{
     opcode::Opcode,
-    ui::{input::PollResult, UI},
+    ui::{input::PollResult, Keymap, UI},
 };
+
+enum WaitingKeyStatus {
+    NoAction,
+    Waiting { reg_index: usize, keymap: Keymap },
+}
 
 pub struct Chip8 {
     memory: [u8; 4096],
@@ -38,8 +43,8 @@ pub struct Chip8 {
     end_of_mem: usize,
     delay_timer: u8,
     sound_timer: u8,
-    keymap: [bool; 16],
-    waiting_key_press_status: Option<(usize, [bool; 16])>,
+    keymap: Keymap,
+    waiting_key_status: WaitingKeyStatus,
 }
 
 impl Chip8 {
@@ -57,7 +62,7 @@ impl Chip8 {
             delay_timer: 0,
             sound_timer: 0,
             keymap: Default::default(),
-            waiting_key_press_status: None,
+            waiting_key_status: WaitingKeyStatus::NoAction,
         };
 
         // load font
@@ -208,13 +213,13 @@ impl Chip8 {
             }
             Opcode::SkipIfPress { x } => {
                 let vx = self.v[x];
-                if self.keymap[vx as usize] {
+                if self.keymap.is_down(vx as usize) {
                     self.pc += 2;
                 }
             }
             Opcode::SkipIfNotPress { x } => {
                 let vx = self.v[x];
-                if !self.keymap[vx as usize] {
+                if !self.keymap.is_down(vx as usize) {
                     self.pc += 2;
                 }
             }
@@ -222,7 +227,10 @@ impl Chip8 {
                 self.v[x] = self.delay_timer;
             }
             Opcode::AssignKey { x } => {
-                self.waiting_key_press_status = Some((x, [false; 16]));
+                self.waiting_key_status = WaitingKeyStatus::Waiting {
+                    reg_index: x,
+                    keymap: Keymap::default(),
+                };
             }
             Opcode::DelayTimerAssign { x } => {
                 self.delay_timer = self.v[x];
@@ -267,22 +275,12 @@ impl Chip8 {
                 PollResult::Stop => {
                     break;
                 }
-                PollResult::KeyMap(keymap) => self.keymap = keymap,
+                PollResult::Keymap(keymap) => self.keymap = keymap,
             };
 
-            match &mut self.waiting_key_press_status {
-                Some((x, keys_press_status)) => {
-                    for (key_id, status) in keys_press_status.iter_mut().enumerate() {
-                        if status == &true && !self.keymap[key_id] {
-                            // pressed and then release,
-                            self.v[*x] = key_id as u8;
-                            self.waiting_key_press_status = None;
-                            break;
-                        }
-                        *status |= self.keymap[key_id];
-                    }
-                }
-                None => self.execute()?,
+            let wait_key_done = self.wait_key();
+            if wait_key_done {
+                self.execute()?;
             }
 
             if self.should_rerender {
@@ -306,5 +304,18 @@ impl Chip8 {
         }
 
         Ok(())
+    }
+
+    fn wait_key(&mut self) -> bool {
+        if let WaitingKeyStatus::Waiting { reg_index, keymap } = &mut self.waiting_key_status {
+            if let Some(key_id) = keymap.down_to_up(&self.keymap) {
+                self.v[*reg_index] = key_id as u8;
+                self.waiting_key_status = WaitingKeyStatus::NoAction;
+            } else {
+                *keymap = keymap.or(&self.keymap);
+            }
+        }
+
+        matches!(self.waiting_key_status, WaitingKeyStatus::NoAction)
     }
 }

@@ -1,9 +1,11 @@
 use anyhow::{Context, Result};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 
+use super::Keymap;
+
 pub(crate) enum PollResult {
     Stop,
-    KeyMap([bool; 16]),
+    Keymap(Keymap),
 }
 
 pub(crate) struct Input {
@@ -37,7 +39,8 @@ impl Input {
             return PollResult::Stop;
         }
 
-        let mut keymap = [false; 16];
+        let mut keymap = Keymap::default();
+
         keys.into_iter()
             .filter_map(|key| match key {
                 Keycode::Num1 => Some(0x1),
@@ -58,8 +61,8 @@ impl Input {
                 Keycode::V => Some(0xF),
                 _ => None,
             })
-            .for_each(|key_id| keymap[key_id] = true);
+            .for_each(|key_id| keymap.set(key_id));
 
-        PollResult::KeyMap(keymap)
+        PollResult::Keymap(keymap)
     }
 }
