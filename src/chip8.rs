@@ -41,8 +41,7 @@ pub struct Chip8 {
     ui: UI,
     should_rerender: bool,
     end_of_mem: usize,
-    delay_timer: u8,
-    sound_timer: u8,
+    timer: Timer,
     keymap: Keymap,
     waiting_key_status: WaitingKeyStatus,
 }
@@ -59,8 +58,7 @@ impl Chip8 {
             ui: UI::new()?,
             should_rerender: false,
             end_of_mem: 0,
-            delay_timer: 0,
-            sound_timer: 0,
+            timer: Timer::default(),
             keymap: Default::default(),
             waiting_key_status: WaitingKeyStatus::NoAction,
         };
@@ -224,7 +222,7 @@ impl Chip8 {
                 }
             }
             Opcode::AssignDelayTimer { x } => {
-                self.v[x] = self.delay_timer;
+                self.v[x] = self.timer.delay;
             }
             Opcode::AssignKey { x } => {
                 self.waiting_key_status = WaitingKeyStatus::Waiting {
@@ -233,10 +231,10 @@ impl Chip8 {
                 };
             }
             Opcode::DelayTimerAssign { x } => {
-                self.delay_timer = self.v[x];
+                self.timer.delay = self.v[x];
             }
             Opcode::SoundTimerAssign { x } => {
-                self.sound_timer = self.v[x];
+                self.timer.sound = self.v[x];
             }
             Opcode::RegAssignAdd { x } => {
                 self.i += self.v[x] as u16;
@@ -288,17 +286,9 @@ impl Chip8 {
                 self.should_rerender = false;
             }
 
-            if self.delay_timer > 0 {
-                self.delay_timer -= 1;
+            if matches!(self.timer.tick(), TimerTick::SoundTimerZero) {
+                // self.ui.audio.beep();
             }
-
-            if self.sound_timer > 0 {
-                if self.sound_timer == 1 {
-                    // self.ui.play_sound();
-                }
-                self.sound_timer -= 1;
-            }
-            // self.ui.stop_sound();
 
             std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 200));
         }
@@ -317,5 +307,33 @@ impl Chip8 {
         }
 
         matches!(self.waiting_key_status, WaitingKeyStatus::NoAction)
+    }
+}
+
+enum TimerTick {
+    Normal,
+    SoundTimerZero,
+}
+
+#[derive(Default)]
+struct Timer {
+    delay: u8,
+    sound: u8,
+}
+
+impl Timer {
+    fn tick(&mut self) -> TimerTick {
+        if self.delay > 0 {
+            self.delay -= 1;
+        }
+
+        if self.sound > 0 {
+            self.sound -= 1;
+            if self.sound == 0 {
+                return TimerTick::SoundTimerZero;
+            }
+        }
+
+        TimerTick::Normal
     }
 }
