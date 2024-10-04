@@ -40,7 +40,6 @@ pub struct Chip8 {
     stack: Vec<u16>,
     ui: UI,
     should_rerender: bool,
-    end_of_mem: usize,
     timer: Timer,
     keymap: Keymap,
     waiting_key_status: WaitingKeyStatus,
@@ -57,7 +56,6 @@ impl Chip8 {
             stack: Vec::with_capacity(16),
             ui: UI::new()?,
             should_rerender: false,
-            end_of_mem: 0,
             timer: Timer::default(),
             keymap: Default::default(),
             waiting_key_status: WaitingKeyStatus::NoAction,
@@ -69,8 +67,7 @@ impl Chip8 {
         // load content
         let content = std::fs::read(rom.as_ref())?;
         let start = 0x200;
-        chip8.end_of_mem = start + content.len();
-        chip8.memory[start..chip8.end_of_mem].clone_from_slice(&content);
+        chip8.memory[start..start + content.len()].clone_from_slice(&content);
 
         Ok(chip8)
     }
