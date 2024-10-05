@@ -28,17 +28,26 @@ impl Display {
         self.canvas.clear();
 
         self.canvas.set_draw_color(Color::RGB(255, 255, 255));
-        for (y, row) in gfx.iter().enumerate() {
-            for (x, pixel) in row.iter().enumerate() {
-                if pixel == &1 {
-                    self.canvas
-                        .fill_rect(Rect::new((x as i32) * 10, (y as i32) * 10, 10, 10))
-                        .ok()
-                        .context("Cannot draw rect")?;
-                };
-            }
-        }
+
+        let rects = gfx
+            .iter()
+            .enumerate()
+            .flat_map(|(y, row)| {
+                row.iter()
+                    .enumerate()
+                    .filter(|(_, pixel)| pixel == &&1)
+                    .map(|(x, _)| Rect::new((x as i32) * 10, (y as i32) * 10, 10, 10))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        self.canvas
+            .fill_rects(&rects)
+            .ok()
+            .context("Cannot draw rect")?;
+
         self.canvas.present();
+
         Ok(())
     }
 }
