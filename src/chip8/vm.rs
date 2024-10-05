@@ -22,7 +22,7 @@ const FONT: [u8; 80] = [
 ];
 use crate::{
     opcode::Opcode,
-    ui::{input::PollResult, UI},
+    ui::{audio::AudioCommand, input::PollResult, UI},
 };
 
 use super::{
@@ -283,8 +283,9 @@ impl VM {
             self.graphic.render(&mut self.ui.display)?;
 
             if matches!(self.timer.tick(), TimerTick::SoundTimerZero) {
-                // self.ui.audio.beep();
+                self.ui.audio.run(AudioCommand::Resume);
             }
+            self.ui.audio.run(AudioCommand::TryPause);
 
             std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 1000));
         }

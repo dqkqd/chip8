@@ -1,3 +1,5 @@
+use std::time::{Duration, SystemTime};
+
 use anyhow::{Context, Result};
 use sdl2::{
     audio::{AudioCallback, AudioDevice, AudioSpecDesired},
@@ -5,7 +7,8 @@ use sdl2::{
 };
 
 pub(crate) struct Audio {
-    audio_device: AudioDevice<SquareWave>,
+    device: AudioDevice<SquareWave>,
+    next_pause: Option<SystemTime>,
 }
 
 impl Audio {
@@ -31,15 +34,42 @@ impl Audio {
             })
             .expect("Cannot open audio device");
 
-        Ok(Self { audio_device })
+        Ok(Self {
+            device: audio_device,
+            next_pause: None,
+        })
     }
 
-    pub(crate) fn beep(&self) {
-        self.audio_device.resume();
+    pub(crate) fn run(&mut self, command: AudioCommand) {
+        match command {
+            AudioCommand::Resume => self.resume(),
+            AudioCommand::TryPause => self.try_pause(),
+        }
     }
-    pub(crate) fn stop(&self) {
-        self.audio_device.pause();
+
+    fn resume(&mut self) {
+        self.device.resume();
+        self.next_pause = Some(SystemTime::now() + Duration::from_secs(1));
     }
+
+    fn try_pause(&mut self) {
+        if self.can_pause() {
+            self.device.pause();
+            self.next_pause = None;
+        }
+    }
+
+    fn can_pause(&self) -> bool {
+        match self.next_pause {
+            Some(next_stop) => SystemTime::now() >= next_stop,
+            None => false,
+        }
+    }
+}
+
+pub(crate) enum AudioCommand {
+    Resume,
+    TryPause,
 }
 
 struct SquareWave {
