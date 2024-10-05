@@ -135,12 +135,15 @@ impl VM {
             }
             Opcode::AssignOr { x, y } => {
                 self.v[x] |= self.v[y];
+                self.v[0xF] = 0;
             }
             Opcode::AssignAnd { x, y } => {
                 self.v[x] &= self.v[y];
+                self.v[0xF] = 0;
             }
             Opcode::AssignXor { x, y } => {
                 self.v[x] ^= self.v[y];
+                self.v[0xF] = 0;
             }
             Opcode::AssignAdd { x, y } => {
                 let res = (self.v[x] as u16) + (self.v[y] as u16);
