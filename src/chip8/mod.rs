@@ -1,3 +1,4 @@
+mod graphic;
 mod timer;
 mod vm;
 

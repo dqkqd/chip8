@@ -25,7 +25,10 @@ use crate::{
     ui::{input::PollResult, Keymap, UI},
 };
 
-use super::timer::{Timer, TimerTick};
+use super::{
+    graphic::Graphic,
+    timer::{Timer, TimerTick},
+};
 
 enum WaitingKeyStatus {
     NoAction,
@@ -37,7 +40,7 @@ pub struct VM {
     v: [u8; 16],
     pc: u16,
     i: u16,
-    gfx: [[u8; 64]; 32],
+    graphic: Graphic,
     stack: Vec<u16>,
     ui: UI,
     should_rerender: bool,
@@ -53,7 +56,7 @@ impl VM {
             v: Default::default(),
             pc: 0x200,
             i: 0,
-            gfx: [[0; 64]; 32],
+            graphic: Graphic::default(),
             stack: Vec::with_capacity(16),
             ui: UI::new()?,
             should_rerender: false,
@@ -94,9 +97,7 @@ impl VM {
         let opcode = self.fetch_opcode().context("Opcode should not be None")?;
         match opcode {
             Opcode::ClearScreen => {
-                for row in &mut self.gfx {
-                    row.fill(0);
-                }
+                self.graphic.clear();
             }
             Opcode::Return => {
                 self.pc = self.stack.pop().context("Invalid stack pointer")?;
@@ -188,35 +189,25 @@ impl VM {
                 self.i = addr;
             }
             Opcode::Draw { x, y, height } => {
-                let vx = self.v[x] as usize;
-                let vy = self.v[y] as usize;
-
-                let vx = vx % 64;
-                let vy = vy % 32;
+                let bitmap = self.memory[self.i as usize..(self.i + height as u16) as usize]
+                    .iter()
+                    .map(|row| {
+                        (0..8)
+                            .rev()
+                            .map(|b| row >> b & 1)
+                            .collect::<Vec<_>>()
+                            .try_into()
+                            .unwrap()
+                    })
+                    .collect::<Vec<[u8; 8]>>();
 
                 self.v[0xF] = 0;
 
-                for dy in 0..height {
-                    let pixel = self.memory[(self.i + dy as u16) as usize];
-                    let y = vy + dy as usize;
-                    if y >= 32 {
-                        break;
-                    }
-
-                    for dx in 0..8 {
-                        let x = vx + dx;
-                        if x >= 64 {
-                            break;
-                        }
-
-                        if pixel & (0x80 >> dx) != 0 {
-                            let bit = &mut self.gfx[y][x];
-                            if bit == &1 {
-                                self.v[0xF] = 1;
-                            }
-                            *bit ^= 1;
-                        }
-                    }
+                let vx = self.v[x] as usize;
+                let vy = self.v[y] as usize;
+                let turned_off = self.graphic.draw(vx, vy, &bitmap);
+                if turned_off {
+                    self.v[0xF] = 1;
                 }
 
                 self.should_rerender = true;
@@ -293,7 +284,7 @@ impl VM {
             }
 
             if self.should_rerender {
-                self.ui.display.render(&self.gfx)?;
+                self.graphic.render(&mut self.ui.display)?;
                 self.should_rerender = false;
             }
 
