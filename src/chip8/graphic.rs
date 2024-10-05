@@ -6,12 +6,14 @@ pub(crate) const WIDTH: usize = 64;
 
 pub(crate) struct Graphic {
     inner: [[u8; WIDTH]; HEIGHT],
+    rerender: bool,
 }
 
 impl Default for Graphic {
     fn default() -> Graphic {
         Graphic {
             inner: [[0; WIDTH]; HEIGHT],
+            rerender: false,
         }
     }
 }
@@ -36,11 +38,17 @@ impl Graphic {
                 *old_bit ^= new_bit;
             }
         }
+        self.rerender = true;
 
         turn_off
     }
 
     pub fn render(&mut self, display: &mut Display) -> Result<()> {
+        // no need to render
+        if !self.rerender {
+            return Ok(());
+        }
+
         let point_locations = self
             .inner
             .iter()
@@ -54,6 +62,7 @@ impl Graphic {
             })
             .collect::<Vec<_>>();
 
+        self.rerender = false;
         display.render(&point_locations)
     }
 }

@@ -43,7 +43,6 @@ pub struct VM {
     graphic: Graphic,
     stack: Vec<u16>,
     ui: UI,
-    should_rerender: bool,
     timer: Timer,
     keymap: Keymap,
     waiting_key_status: WaitingKeyStatus,
@@ -59,7 +58,6 @@ impl VM {
             graphic: Graphic::default(),
             stack: Vec::with_capacity(16),
             ui: UI::new()?,
-            should_rerender: false,
             timer: Timer::default(),
             keymap: Default::default(),
             waiting_key_status: WaitingKeyStatus::NoAction,
@@ -209,8 +207,6 @@ impl VM {
                 if turned_off {
                     self.v[0xF] = 1;
                 }
-
-                self.should_rerender = true;
             }
             Opcode::SkipIfPress { x } => {
                 let vx = self.v[x];
@@ -283,10 +279,7 @@ impl VM {
                 self.execute()?;
             }
 
-            if self.should_rerender {
-                self.graphic.render(&mut self.ui.display)?;
-                self.should_rerender = false;
-            }
+            self.graphic.render(&mut self.ui.display)?;
 
             if matches!(self.timer.tick(), TimerTick::SoundTimerZero) {
                 // self.ui.audio.beep();
