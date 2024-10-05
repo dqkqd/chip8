@@ -3,7 +3,7 @@ use anyhow::Result;
 
 const HEIGHT: usize = 32;
 const WIDTH: usize = 64;
-const SCALE: usize = 20;
+const SCALE: usize = 10;
 
 pub(crate) struct Graphic {
     inner: [[u8; WIDTH]; HEIGHT],
@@ -42,6 +42,19 @@ impl Graphic {
     }
 
     pub fn render(&mut self, display: &mut Display) -> Result<()> {
-        display.render(&self.inner)
+        let point_locations = self
+            .inner
+            .iter()
+            .enumerate()
+            .flat_map(|(y, row)| {
+                row.iter()
+                    .enumerate()
+                    .filter(|(_, pixel)| pixel == &&1)
+                    .map(|(x, _)| (x, y))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
+
+        display.render(&point_locations)
     }
 }

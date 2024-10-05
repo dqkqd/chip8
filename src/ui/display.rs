@@ -23,22 +23,15 @@ impl Display {
         })
     }
 
-    pub(crate) fn render(&mut self, gfx: &[[u8; 64]; 32]) -> Result<()> {
+    pub(crate) fn render(&mut self, point_locations: &[(usize, usize)]) -> Result<()> {
         self.canvas.set_draw_color(Color::RGB(0, 0, 0));
         self.canvas.clear();
 
         self.canvas.set_draw_color(Color::RGB(255, 255, 255));
 
-        let rects = gfx
+        let rects = point_locations
             .iter()
-            .enumerate()
-            .flat_map(|(y, row)| {
-                row.iter()
-                    .enumerate()
-                    .filter(|(_, pixel)| pixel == &&1)
-                    .map(|(x, _)| Rect::new((x as i32) * 10, (y as i32) * 10, 10, 10))
-                    .collect::<Vec<_>>()
-            })
+            .map(|(x, y)| Rect::new((*x as i32) * 10, (*y as i32) * 10, 10, 10))
             .collect::<Vec<_>>();
 
         self.canvas
