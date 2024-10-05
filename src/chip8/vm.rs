@@ -187,6 +187,9 @@ impl VM {
             Opcode::RegAssign { addr } => {
                 self.i = addr;
             }
+            Opcode::JumpOffset { x, addr } => {
+                self.pc = addr + self.v[x] as u16;
+            }
             Opcode::Draw { x, y, height } => {
                 let bitmap = self.memory[self.i as usize..(self.i + height as u16) as usize]
                     .iter()

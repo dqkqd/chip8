@@ -42,6 +42,8 @@ pub(crate) enum Opcode {
     SkipIfNotEqual { x: usize, y: usize },
     // ANNN
     RegAssign { addr: u16 },
+    // BXNN
+    JumpOffset { x: usize, addr: u16 },
     // DXYN
     Draw { x: usize, y: usize, height: u8 },
     // EX9E
@@ -108,6 +110,7 @@ impl TryFrom<u16> for Opcode {
             },
             0x9000 => Ok(Opcode::SkipIfNotEqual { x, y }),
             0xA000 => Ok(Opcode::RegAssign { addr: nnn }),
+            0xB000 => Ok(Opcode::JumpOffset { x, addr: nnn }),
             0xD000 => Ok(Opcode::Draw { x, y, height: n }),
             0xE000 => match nn {
                 0x009E => Ok(Opcode::SkipIfPress { x }),
