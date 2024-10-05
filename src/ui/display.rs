@@ -23,18 +23,16 @@ impl Display {
         })
     }
 
-    pub(crate) fn render(&mut self, gfx: &[u8; 64 * 32]) -> Result<()> {
+    pub(crate) fn render(&mut self, gfx: &[[u8; 64]; 32]) -> Result<()> {
         self.canvas.set_draw_color(Color::RGB(0, 0, 0));
         self.canvas.clear();
 
         self.canvas.set_draw_color(Color::RGB(255, 255, 255));
-        for x in 0..64 {
-            for y in 0..32 {
-                let offset = x + y * 64;
-                let bit = gfx[offset as usize];
-                if bit == 1 {
+        for (y, row) in gfx.iter().enumerate() {
+            for (x, pixel) in row.iter().enumerate() {
+                if pixel == &1 {
                     self.canvas
-                        .fill_rect(Rect::new(x * 10, y * 10, 10, 10))
+                        .fill_rect(Rect::new((x as i32) * 10, (y as i32) * 10, 10, 10))
                         .ok()
                         .context("Cannot draw rect")?;
                 };

@@ -37,7 +37,7 @@ pub struct VM {
     v: [u8; 16],
     pc: u16,
     i: u16,
-    gfx: [u8; 64 * 32],
+    gfx: [[u8; 64]; 32],
     stack: Vec<u16>,
     ui: UI,
     should_rerender: bool,
@@ -53,7 +53,7 @@ impl VM {
             v: Default::default(),
             pc: 0x200,
             i: 0,
-            gfx: [0; 64 * 32],
+            gfx: [[0; 64]; 32],
             stack: Vec::with_capacity(16),
             ui: UI::new()?,
             should_rerender: false,
@@ -94,7 +94,9 @@ impl VM {
         let opcode = self.fetch_opcode().context("Opcode should not be None")?;
         match opcode {
             Opcode::ClearScreen => {
-                self.gfx.fill(0);
+                for row in &mut self.gfx {
+                    row.fill(0);
+                }
             }
             Opcode::Return => {
                 self.pc = self.stack.pop().context("Invalid stack pointer")?;
@@ -189,14 +191,26 @@ impl VM {
                 let vx = self.v[x] as usize;
                 let vy = self.v[y] as usize;
 
+                let vx = vx % 64;
+                let vy = vy % 32;
+
                 self.v[0xF] = 0;
 
                 for dy in 0..height {
                     let pixel = self.memory[(self.i + dy as u16) as usize];
+                    let y = vy + dy as usize;
+                    if y >= 32 {
+                        break;
+                    }
+
                     for dx in 0..8 {
+                        let x = vx + dx;
+                        if x >= 64 {
+                            break;
+                        }
+
                         if pixel & (0x80 >> dx) != 0 {
-                            let offset = vx + dx + (vy + dy as usize) * 64;
-                            let bit = &mut self.gfx[offset];
+                            let bit = &mut self.gfx[y][x];
                             if bit == &1 {
                                 self.v[0xF] = 1;
                             }
