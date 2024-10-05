@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use anyhow::{Context, Result};
 
-
 const FONT: [u8; 80] = [
     0xF0, 0x90, 0x90, 0x90, 0xF0, // 0
     0x20, 0x60, 0x20, 0x20, 0x70, // 1
@@ -31,7 +30,7 @@ enum WaitingKeyStatus {
     Waiting { reg_index: usize, keymap: Keymap },
 }
 
-pub struct Chip8 {
+pub struct VM {
     memory: [u8; 4096],
     v: [u8; 16],
     pc: u16,
@@ -45,9 +44,9 @@ pub struct Chip8 {
     waiting_key_status: WaitingKeyStatus,
 }
 
-impl Chip8 {
-    pub fn load<P: AsRef<std::path::Path>>(rom: P) -> Result<Chip8> {
-        let mut chip8 = Chip8 {
+impl VM {
+    pub fn load<P: AsRef<std::path::Path>>(rom: P) -> Result<VM> {
+        let mut chip8 = VM {
             memory: [0; 4096],
             v: Default::default(),
             pc: 0x200,
