@@ -274,7 +274,6 @@ impl VM {
                 }
                 self.i += x as u16 + 1;
             }
-            _ => unimplemented!(),
         }
         Ok(())
     }
@@ -302,7 +301,7 @@ impl VM {
                 // self.ui.audio.beep();
             }
 
-            std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 200));
+            std::thread::sleep(Duration::new(0, 1_000_000_000u32 / 1000));
         }
 
         Ok(())
