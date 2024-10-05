@@ -1,7 +1,7 @@
 use anyhow::{Context, Result};
 use sdl2::{event::Event, keyboard::Keycode, EventPump, Sdl};
 
-use super::Keymap;
+use crate::chip8::keymap::Keymap;
 
 pub(crate) enum PollResult {
     Stop,

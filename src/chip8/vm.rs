@@ -22,11 +22,12 @@ const FONT: [u8; 80] = [
 ];
 use crate::{
     opcode::Opcode,
-    ui::{input::PollResult, Keymap, UI},
+    ui::{input::PollResult, UI},
 };
 
 use super::{
     graphic::Graphic,
+    keymap::Keymap,
     timer::{Timer, TimerTick},
 };
 
