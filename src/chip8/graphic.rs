@@ -23,27 +23,18 @@ impl Graphic {
     }
 
     pub fn draw(&mut self, vx: usize, vy: usize, bitmap: &[[u8; 8]]) -> bool {
-        let vx = vx % WIDTH;
-        let vy = vy % HEIGHT;
+        let lx = vx % WIDTH;
+        let ly = vy % HEIGHT;
+        let rx = (lx + 8).min(WIDTH);
+        let ry = (ly + bitmap.len()).min(HEIGHT);
 
         let mut turn_off = false;
-
-        for dy in 0..bitmap.len() {
-            let y = vy + dy;
-            if y >= HEIGHT {
-                break;
-            }
-
-            for dx in 0..8 {
-                let x = vx + dx;
-                if x >= WIDTH {
-                    break;
-                }
-                let bit = &mut self.inner[y][x];
-                if bit == &1 && bitmap[dy][dx] == 1 {
+        for (old_row, new_row) in self.inner[ly..ry].iter_mut().zip(bitmap) {
+            for (old_bit, new_bit) in old_row[lx..rx].iter_mut().zip(new_row) {
+                if new_bit == &1 && old_bit == &1 {
                     turn_off = true;
                 }
-                *bit ^= bitmap[dy][dx];
+                *old_bit ^= new_bit;
             }
         }
 
