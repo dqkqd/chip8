@@ -2,6 +2,10 @@ use anyhow::{Context, Result};
 
 use sdl2::{pixels::Color, rect::Rect, render::Canvas, video::Window, Sdl};
 
+use crate::chip8::graphic::{HEIGHT, WIDTH};
+
+const SCALE: usize = 10;
+
 pub(crate) struct Display {
     canvas: Canvas<Window>,
 }
@@ -14,7 +18,7 @@ impl Display {
             .context("Cannot open video system")?;
 
         let window = video_subsystem
-            .window("chip8", 640, 320)
+            .window("chip8", (WIDTH * SCALE) as u32, (HEIGHT * SCALE) as u32)
             .position_centered()
             .build()?;
 
@@ -31,7 +35,14 @@ impl Display {
 
         let rects = point_locations
             .iter()
-            .map(|(x, y)| Rect::new((*x as i32) * 10, (*y as i32) * 10, 10, 10))
+            .map(|(x, y)| {
+                Rect::new(
+                    (x * SCALE) as i32,
+                    (y * SCALE) as i32,
+                    SCALE as u32,
+                    SCALE as u32,
+                )
+            })
             .collect::<Vec<_>>();
 
         self.canvas

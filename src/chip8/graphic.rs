@@ -1,9 +1,8 @@
 use crate::ui::display::Display;
 use anyhow::Result;
 
-const HEIGHT: usize = 32;
-const WIDTH: usize = 64;
-const SCALE: usize = 10;
+pub(crate) const HEIGHT: usize = 32;
+pub(crate) const WIDTH: usize = 64;
 
 pub(crate) struct Graphic {
     inner: [[u8; WIDTH]; HEIGHT],
